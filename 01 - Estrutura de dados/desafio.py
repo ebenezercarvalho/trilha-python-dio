@@ -16,13 +16,18 @@ def menu():
 
 
 def depositar(saldo, valor, extrato, /):
-    if valor > 0:
+    try:
+        valor = float(valor)
+        if valor <= 0:
+            raise ValueError("O valor precisa ser positivo")
+        
         saldo += valor
         extrato += f"Depósito:\tR$ {valor:.2f}\n"
         print("\n=== Depósito realizado com sucesso! ===")
-    else:
-        print("\n@@@ Operação falhou! O valor informado é inválido. @@@")
-
+        
+    except ValueError as e:
+        print(f"\n@@@ Operação falhou! {str(e)} @@@")
+    
     return saldo, extrato
 
 
@@ -59,21 +64,45 @@ def exibir_extrato(saldo, /, *, extrato):
     print("==========================================")
 
 
+def validar_cpf(cpf):
+    # Remove caracteres não numéricos
+    cpf = ''.join(filter(str.isdigit, cpf))
+    
+    if len(cpf) != 11:
+        raise ValueError("CPF deve conter 11 dígitos")
+    
+    return cpf
+
+
 def criar_usuario(usuarios):
-    cpf = input("Informe o CPF (somente número): ")
-    usuario = filtrar_usuario(cpf, usuarios)
+    try:
+        cpf = validar_cpf(input("Informe o CPF (somente número): "))
+        if filtrar_usuario(cpf, usuarios):
+            print("\n@@@ Já existe usuário com esse CPF! @@@")
+            return
 
-    if usuario:
-        print("\n@@@ Já existe usuário com esse CPF! @@@")
-        return
+        nome = input("Informe o nome completo: ")
+        if not nome.strip():
+            raise ValueError("Nome não pode estar vazio")
 
-    nome = input("Informe o nome completo: ")
-    data_nascimento = input("Informe a data de nascimento (dd-mm-aaaa): ")
-    endereco = input("Informe o endereço (logradouro, nro - bairro - cidade/sigla estado): ")
+        data_nascimento = input("Informe a data de nascimento (dd-mm-aaaa): ")
+        # Aqui você poderia adicionar validação de data
 
-    usuarios.append({"nome": nome, "data_nascimento": data_nascimento, "cpf": cpf, "endereco": endereco})
+        endereco = input("Informe o endereço (logradouro, nro - bairro - cidade/sigla estado): ")
+        if not all(x in endereco for x in [',', '-']):
+            raise ValueError("Endereço deve seguir o formato especificado")
 
-    print("=== Usuário criado com sucesso! ===")
+        usuarios.append({
+            "nome": nome,
+            "data_nascimento": data_nascimento,
+            "cpf": cpf,
+            "endereco": endereco
+        })
+
+        print("=== Usuário criado com sucesso! ===")
+        
+    except ValueError as e:
+        print(f"\n@@@ Erro ao criar usuário: {str(e)} @@@")
 
 
 def filtrar_usuario(cpf, usuarios):
